@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
+import PixModal from "../../components/PixModal/PixModal";
 import "./Checkout.css";
 
 const KITS = {
@@ -13,13 +14,11 @@ const THUMB = "/assets/albbox.png";
 
 /* ================= UTIL (máscaras) ================= */
 const onlyDigits = (v = "") => String(v).replace(/\D/g, "");
-
 const formatCEP = (v = "") => {
   const d = onlyDigits(v).slice(0, 8);
   if (d.length <= 5) return d;
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 };
-
 const formatCPF = (v = "") => {
   const d = onlyDigits(v).slice(0, 11);
   return d
@@ -27,7 +26,6 @@ const formatCPF = (v = "") => {
     .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
     .replace(/\.(\d{3})(\d)/, ".$1-$2");
 };
-
 const formatPhone = (v = "") => {
   const d = onlyDigits(v).slice(0, 11);
   if (d.length <= 2) return d ? `(${d}` : "";
@@ -45,22 +43,15 @@ const parseBRL = (s) => {
   const n = Number(clean);
   return Number.isFinite(n) ? n : 0;
 };
-
 const formatBRL = (n) => `R$ ${(Number.isFinite(n) ? n : 0).toFixed(2).replace(".", ",")}`;
 
-/* ================= ORDER BUMP =================
-   - 2 caixas = R$ 69,00 (com -30% já aplicado)
-   - 4 caixas = 2x
-   - 8 caixas = 4x
-   - badge sempre -30%
-*/
+/* ================= ORDER BUMP ================= */
 const BUMP_DISCOUNT_PCT = 30;
 const BASE_BUMP_DISCOUNTED_2 = 69.0;
-
 const bumpDiscountedPrice = (boxes) => BASE_BUMP_DISCOUNTED_2 * (boxes / 2);
 const bumpFullPrice = (boxes) => bumpDiscountedPrice(boxes) / (1 - BUMP_DISCOUNT_PCT / 100);
-const bumpPacks = (boxes) => boxes * 30;     // 2 -> 60 pacotes
-const bumpStickers = (boxes) => boxes * 210; // 2 -> 420 figurinhas
+const bumpPacks = (boxes) => boxes * 30;
+const bumpStickers = (boxes) => boxes * 210;
 
 export default function Checkout() {
   const nav = useNavigate();
@@ -104,6 +95,7 @@ export default function Checkout() {
   const [pixQrText, setPixQrText] = useState("");
   const [pixQrImg, setPixQrImg] = useState("");
   const [pixExternalId, setPixExternalId] = useState("");
+  const [pixOpen, setPixOpen] = useState(false);
 
   const bumpPrice = bumpEnabled ? bumpDiscountedPrice(bumpBoxes) : 0;
   const kitPriceNum = parseBRL(kit.price);
@@ -162,6 +154,7 @@ export default function Checkout() {
     setPixError("");
     setPixQrText("");
     setPixQrImg("");
+    setPixOpen(false);
 
     const err = validate();
     if (err) return setPixError(err);
@@ -201,6 +194,9 @@ export default function Checkout() {
       // QR visual
       const img = await QRCode.toDataURL(code, { margin: 1, width: 260 });
       setPixQrImg(img);
+
+      // abre modal
+      setPixOpen(true);
     } catch {
       setPixError("Falha na comunicação. Tente novamente.");
     } finally {
@@ -210,6 +206,20 @@ export default function Checkout() {
 
   return (
     <div className="co">
+      {/* MODAL PIX */}
+      <PixModal
+        open={pixOpen}
+        qrText={pixQrText}
+        qrImg={pixQrImg}
+        logoSrc="/assets/logo.png"
+        externalId={pixExternalId}
+        onClose={() => setPixOpen(false)}
+        onPaid={() => {
+          // opcional: aqui você pode navegar pra uma rota /obrigado depois
+          // nav("/obrigado");
+        }}
+      />
+
       <div className="coTop">
         <button className="coBack" type="button" onClick={() => nav(-1)}>
           ← <span>Voltar</span>
@@ -423,27 +433,6 @@ export default function Checkout() {
         </button>
 
         {pixError ? <div className="coError coError--center">{pixError}</div> : null}
-
-        {pixQrText ? (
-          <div className="coPixBox">
-            <div className="coPixBox__title">PIX gerado ✅</div>
-            <div className="coPixBox__subtitle">Escaneie o QR Code ou copie e cole no app do banco</div>
-
-            {pixQrImg ? (
-              <div className="coPixBox__qrWrap">
-                <img className="coPixBox__qr" src={pixQrImg} alt="QR Code PIX" />
-              </div>
-            ) : null}
-
-            <textarea className="coPixBox__code" readOnly value={pixQrText} />
-
-            <button type="button" className="coPixBox__copy" onClick={() => navigator.clipboard.writeText(pixQrText)}>
-              COPIAR CÓDIGO PIX
-            </button>
-
-            <div className="coPixBox__meta">Pedido: {pixExternalId}</div>
-          </div>
-        ) : null}
 
         <div className="coSecureNote">Seus dados estão protegidos e não serão compartilhados.</div>
         <div className="coFooterNote">Panini - Todos os direitos reservados.</div>
