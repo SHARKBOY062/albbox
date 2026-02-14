@@ -1,5 +1,5 @@
 :root{
-  --offerbar-h: 88px; /* altura usada pra compensar no conteúdo */
+  --offerbar-h: 88px;
 }
 
 .offerBarWrap{
@@ -18,9 +18,7 @@
   gap: 16px;
 }
 
-.offerBar__left{
-  flex: 0 0 auto;
-}
+.offerBar__left{ flex: 0 0 auto; }
 
 .offerBar__logo{
   width: 240px;
@@ -80,27 +78,58 @@
   gap: 8px;
 }
 
-.offerCard__big{
-  font-size: 26px;
-}
+.offerCard__big{ font-size: 26px; }
 
 .offerBarDivider{
   height: 1px;
   background: rgba(0,0,0,.10);
 }
 
-/* só empilha quando realmente não couber */
+/* ================= MOBILE / TABLET ================= */
 @media (max-width: 640px){
   .offerBar{
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 0 14px;
   }
-  .offerBar__right{
+
+  /* ✅ logo sempre centralizada */
+  .offerBar__left{
+    width: 100%;
+    display: flex;
     justify-content: center;
   }
+
+  /* evita a logo “puxar” por padding do .container */
+  .offerBar__logoSlot{ margin: 0 auto; }
+
+  /* ✅ cards em 2 colunas no mobile (fica bonito igual print de checkout) */
+  .offerBar__right{
+    width: 100%;
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    justify-content: center;
+    align-items: stretch;
+    max-width: 420px;
+  }
+
   .offerCard{
     width: 100%;
+    padding: 10px 12px;
+  }
+
+  .offerCard__value{ font-size: 20px; }
+  .offerCard__big{ font-size: 24px; }
+}
+
+/* mobile muito pequeno: empilha os cards pra não ficar apertado */
+@media (max-width: 360px){
+  .offerBar__right{
+    grid-template-columns: 1fr;
     max-width: 320px;
-    margin: 0 auto;
   }
 }
