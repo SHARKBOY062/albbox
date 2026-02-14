@@ -1,0 +1,140 @@
+.faq{
+  background: #fff;
+  padding: 26px 0 40px;
+}
+
+.faq__inner{
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.faq__title{
+  margin: 0 0 18px;
+  font-size: 26px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.faq__list{
+  width: min(760px, 92vw);
+  display: grid;
+  gap: 14px;
+}
+
+/* item */
+.faqItem{
+  border: 1px solid #e6e8ef;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* foco azul exatamente como no print (linha fina azul) */
+.faqItem:focus-within{
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+/* botão pergunta */
+.faqQ{
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  outline: none;
+}
+
+/* hover sutil (não muda estrutura) */
+.faqQ:hover{
+  background: rgba(17, 24, 39, 0.02);
+}
+
+.faqQ__text{
+  font-weight: 800;
+  font-size: 16px;
+  color: #111827;
+}
+
+.faqChevron{
+  width: 22px;
+  height: 22px;
+  color: #6b7280;
+  transition: transform .18s ease;
+  flex: 0 0 auto;
+}
+
+.faqChevron--open{
+  transform: rotate(180deg);
+}
+
+/* answer anim */
+.faqA{
+  overflow: hidden;
+  transition: max-height .2s ease;
+}
+
+.faqA__inner{
+  padding: 0 16px 16px;
+  text-align: left;
+  color: rgb(106, 113, 130);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* bottom area */
+.faq__bottomDivider{
+  width: min(760px, 92vw);
+  height: 1px;
+  background: rgba(0,0,0,.10);
+  margin: 22px 0 16px;
+}
+
+.faq__brand{
+  width: min(760px, 92vw);
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.faq__logo{
+  width: 160px;
+  height: auto;
+  display: block;
+}
+
+.faq__secure{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(106, 113, 130);
+  font-size: 13px;
+}
+
+.faqLock{
+  width: 16px;
+  height: 16px;
+  color: rgb(106, 113, 130);
+}
+
+/* CTA */
+.faq__cta{
+  width: min(760px, 92vw);
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  background: #43a047;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: .4px;
+  font-size: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}

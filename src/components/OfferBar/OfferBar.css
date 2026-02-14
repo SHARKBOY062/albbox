@@ -1,0 +1,106 @@
+:root{
+  --offerbar-h: 88px; /* altura usada pra compensar no conteúdo */
+}
+
+.offerBarWrap{
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: #fff;
+}
+
+.offerBar{
+  min-height: var(--offerbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  gap: 16px;
+}
+
+.offerBar__left{
+  flex: 0 0 auto;
+}
+
+.offerBar__logo{
+  width: 240px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.offerBar__logoSlot{
+  width: 240px;
+  height: 58px;
+}
+
+/* placeholder do logo */
+.offerBar__logoSlot .imageSlot__phBox{
+  min-width: 240px;
+  min-height: 58px;
+  border-radius: 6px;
+}
+
+/* imagem do logo real */
+.offerBar__logoSlot .imageSlot__img{
+  max-height: 58px;
+  width: auto;
+}
+
+.offerBar__right{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.offerCard{
+  background: rgb(151, 0, 51);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  width: 190px;
+  text-align: center;
+}
+
+.offerCard__label{
+  font-size: 12px;
+  opacity: .95;
+  margin-bottom: 6px;
+}
+
+.offerCard__value{
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+
+.offerCard__big{
+  font-size: 26px;
+}
+
+.offerBarDivider{
+  height: 1px;
+  background: rgba(0,0,0,.10);
+}
+
+/* só empilha quando realmente não couber */
+@media (max-width: 640px){
+  .offerBar{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .offerBar__right{
+    justify-content: center;
+  }
+  .offerCard{
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}

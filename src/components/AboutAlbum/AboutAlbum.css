@@ -1,0 +1,122 @@
+.aboutAlbum{
+  background: #fff;
+  padding: 34px 0 44px;
+}
+
+.aboutAlbum__inner{
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.aboutAlbum__title{
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.aboutAlbum__subtitle{
+  margin: 10px 0 18px;
+  font-size: 15px;
+  color: rgb(106, 113, 130);
+}
+
+.aboutAlbum__stack{
+  width: min(760px, 92vw);
+  display: grid;
+  gap: 16px;
+}
+
+/* cards */
+.aaInfoCard{
+  border: 1px solid #e6e8ef;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.aaBadge{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.aaBadge--red{ background: #ef4444; }
+.aaBadge--orange{ background: #f97316; }
+.aaBadge--yellow{ background: #facc15; color: #fff; }
+.aaBadge--green{ background: #22c55e; }
+
+.aaIcon{
+  width: 20px;
+  height: 20px;
+}
+
+.aaInfoTitle{
+  font-weight: 900;
+  font-size: 16px;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.aaInfoSub{
+  font-size: 13px;
+  color: rgb(106, 113, 130);
+}
+
+/* Edição Histórica card */
+.aaHistory{
+  border: 1px solid #e6e8ef;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.aaHistory__head{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  color: #111827;
+  font-size: 18px;
+  margin: 2px 0 10px;
+}
+
+.aaStar{
+  width: 18px;
+  height: 18px;
+  color: #fbbf24;
+}
+
+.aaHistory__list{
+  display: grid;
+  gap: 10px;
+}
+
+.aaHistory__item{
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: start;
+  color: #374151;
+  font-size: 14px;
+}
+
+@media (max-width: 640px){
+  .aaInfoCard{
+    grid-template-columns: 54px 1fr;
+    padding: 14px 14px;
+  }
+  .aaHistory{
+    padding: 16px 14px;
+  }
+}

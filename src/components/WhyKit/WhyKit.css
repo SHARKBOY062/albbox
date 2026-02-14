@@ -1,0 +1,117 @@
+.whyKit{
+  background: #fff;
+  padding: 26px 0 18px;
+}
+
+.whyKit__inner{
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.whyKit__heading{
+  margin: 0 0 18px;
+  font-size: 26px;
+  font-weight: 900;
+  color: #111827;
+}
+
+/* mesma largura do print */
+.whyKit__stack{
+  width: min(760px, 92vw);
+  display: grid;
+  gap: 16px;
+}
+
+/* card igual */
+.wkCard{
+  border: 1px solid #e6e8ef;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+/* bolinha verde do print */
+.wkBadge{
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: #57c75f;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  margin-left: 6px;
+}
+
+/* ícones “reais” (brancos, espessura certinha) */
+.wkIcon{
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+/* texto */
+.wkTitle{
+  font-weight: 900;
+  font-size: 16px;
+  color: #111827;
+  margin: 0 0 2px;
+}
+
+.wkSub{
+  font-size: 13px;
+  color: rgb(106, 113, 130);
+  margin: 0;
+}
+
+/* linha de confiança (igual print) */
+.whyKit__trust{
+  width: min(760px, 92vw);
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  color: rgb(106, 113, 130);
+  font-size: 14px;
+}
+
+/* divisor */
+.whyKit__divider{
+  width: min(760px, 92vw);
+  height: 1px;
+  background: rgba(0,0,0,.10);
+  margin: 18px 0 14px;
+}
+
+/* CTA */
+.whyKit__cta{
+  width: min(760px, 92vw);
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  background: #43a047;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: .4px;
+  font-size: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+
+/* responsivo igual: os 3 textos viram coluna */
+@media (max-width: 640px){
+  .wkCard{
+    grid-template-columns: 64px 1fr;
+    padding: 14px 14px;
+  }
+
+  .whyKit__trust{
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

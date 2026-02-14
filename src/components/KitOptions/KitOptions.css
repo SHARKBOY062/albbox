@@ -1,0 +1,33 @@
+.kitOptions{
+  width: min(760px, 92vw);
+  margin: 18px auto 0;
+}
+
+.kitOptions__list{
+  display: grid;
+  gap: 18px;
+}
+
+.kitOptions__cta{
+  width: 100%;
+  margin-top: 18px;
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  background: #43a047;
+  color: #fff;
+  padding: 20px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+
+.kitOptions__ctaTitle{
+  font-weight: 900;
+  letter-spacing: .4px;
+  font-size: 18px;
+}
+
+.kitOptions__ctaSub{
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: .95;
+}

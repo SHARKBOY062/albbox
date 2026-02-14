@@ -1,0 +1,31 @@
+.kitSection{
+  background: #fff;
+  padding: 0 0 40px;
+}
+
+.kitSection__inner{
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.kitSection__image{
+  width: min(760px, 92vw);
+  height: auto;
+  display: block;
+  margin: 0 auto 18px;
+  border-radius: 0;
+}
+
+.kitSection__title{
+  margin: 6px 0 6px;
+  font-size: 26px;
+  font-weight: 900;
+  color: rgb(16, 23, 40);
+}
+
+.kitSection__subtitle{
+  margin: 0;
+  color: rgb(106, 113, 130);
+  font-size: 15px;
+}

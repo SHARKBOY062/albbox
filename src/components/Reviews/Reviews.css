@@ -1,0 +1,126 @@
+.reviews{
+  background: #fff;
+  padding: 26px 0 40px;
+}
+
+.reviews__inner{
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.reviews__title{
+  margin: 0 0 18px;
+  font-size: 26px;
+  font-weight: 900;
+;
+  color: #111827;
+}
+
+.reviews__stack{
+  width: min(760px, 92vw);
+  display: grid;
+  gap: 16px;
+}
+
+/* Card */
+.rvCard{
+  border: 1px solid #e6e8ef;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px 16px 14px;
+  text-align: left;
+}
+
+.rvTop{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rvUser{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rvAvatar{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #e6e8ef;
+}
+
+.rvName{
+  font-weight: 900;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.rvCity{
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgb(106, 113, 130);
+}
+
+.rvStars{
+  display: inline-flex;
+  gap: 2px;
+  color: #fbbf24;
+  flex: 0 0 auto;
+}
+
+.rvStar{
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+}
+
+.rvTitle{
+  font-weight: 900;
+  color: #111827;
+  font-size: 14px;
+  margin: 2px 0 6px;
+}
+
+.rvText{
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.rvBottom{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: rgb(106, 113, 130);
+  font-size: 12px;
+}
+
+.rvVerified{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.rvCheck{
+  width: 14px;
+  height: 14px;
+}
+
+.rvAgo{
+  color: rgb(106, 113, 130);
+}
+
+@media (max-width: 520px){
+  .rvTop{
+    align-items: flex-start;
+  }
+}
