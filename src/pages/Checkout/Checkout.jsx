@@ -1,32 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import QRCode from "qrcode";
 import "./Checkout.css";
 
 const KITS = {
-  iniciante: {
-    id: "iniciante",
-    title: "Kit Iniciante",
-    desc: "1 Álbum Capa Dura + 30 Pacotes",
-    price: "R$ 98,90",
-  },
-  campeao: {
-    id: "campeao",
-    title: "Kit Campeão",
-    desc: "1 Álbum Capa Dura + 60 Pacotes",
-    price: "R$ 148,90",
-  },
-  colecionador: {
-    id: "colecionador",
-    title: "Kit Colecionador",
-    desc: "1 Álbum Capa Dura + 90 Pacotes",
-    price: "R$ 198,90",
-  },
+  iniciante: { id: "iniciante", title: "Kit Iniciante", desc: "1 Álbum Capa Dura + 30 Pacotes", price: "R$ 98,90" },
+  campeao: { id: "campeao", title: "Kit Campeão", desc: "1 Álbum Capa Dura + 60 Pacotes", price: "R$ 148,90" },
+  colecionador: { id: "colecionador", title: "Kit Colecionador", desc: "1 Álbum Capa Dura + 90 Pacotes", price: "R$ 198,90" },
 };
 
 const THUMB = "/assets/albbox.png";
 
 /* ================= UTIL (máscaras) ================= */
-
 const onlyDigits = (v = "") => String(v).replace(/\D/g, "");
 
 const formatCEP = (v = "") => {
@@ -56,44 +41,26 @@ const UF_LIST = [
 ];
 
 const parseBRL = (s) => {
-  // "R$ 198,90" -> 198.90
-  const clean = String(s || "")
-    .replace("R$", "")
-    .replace(/\s/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
+  const clean = String(s || "").replace("R$", "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
   const n = Number(clean);
   return Number.isFinite(n) ? n : 0;
 };
 
-const formatBRL = (n) => {
-  const v = Number.isFinite(n) ? n : 0;
-  return `R$ ${v.toFixed(2).replace(".", ",")}`;
-};
+const formatBRL = (n) => `R$ ${(Number.isFinite(n) ? n : 0).toFixed(2).replace(".", ",")}`;
 
 /* ================= ORDER BUMP =================
-   Regras do usuário:
-   - 2 caixas = R$ 69,00 (preço com desconto)
+   - 2 caixas = R$ 69,00 (com -30% já aplicado)
    - 4 caixas = 2x
    - 8 caixas = 4x
-   - Sempre -30%
+   - badge sempre -30%
 */
-
 const BUMP_DISCOUNT_PCT = 30;
-const BASE_BUMP_DISCOUNTED_2 = 69.0; // 2 caixas (com desconto), conforme print
+const BASE_BUMP_DISCOUNTED_2 = 69.0;
 
-const bumpDiscountedPrice = (boxes) => {
-  const mult = boxes / 2; // 2->1, 4->2, 8->4
-  return BASE_BUMP_DISCOUNTED_2 * mult;
-};
-
-const bumpFullPrice = (boxes) => {
-  const discounted = bumpDiscountedPrice(boxes);
-  return discounted / (1 - BUMP_DISCOUNT_PCT / 100);
-};
-
-const bumpPacks = (boxes) => boxes * 30;        // 2 caixas -> 60 pacotes
-const bumpStickers = (boxes) => boxes * 210;    // 2 caixas -> 420 figurinhas
+const bumpDiscountedPrice = (boxes) => BASE_BUMP_DISCOUNTED_2 * (boxes / 2);
+const bumpFullPrice = (boxes) => bumpDiscountedPrice(boxes) / (1 - BUMP_DISCOUNT_PCT / 100);
+const bumpPacks = (boxes) => boxes * 30;     // 2 -> 60 pacotes
+const bumpStickers = (boxes) => boxes * 210; // 2 -> 420 figurinhas
 
 export default function Checkout() {
   const nav = useNavigate();
@@ -102,10 +69,8 @@ export default function Checkout() {
   const kitId = useMemo(() => {
     const fromState = location.state?.kitId;
     if (fromState) return fromState;
-
     const fromLs = localStorage.getItem("albumcopa_kitId");
     if (fromLs) return fromLs;
-
     return "colecionador";
   }, [location.state]);
 
@@ -129,14 +94,15 @@ export default function Checkout() {
   const [cepStatus, setCepStatus] = useState({ loading: false, error: "" });
   const cepDigits = onlyDigits(cep);
 
-  // Order bump state
+  // Order bump
   const [bumpEnabled, setBumpEnabled] = useState(false);
-  const [bumpBoxes, setBumpBoxes] = useState(2); // 2, 4, 8
+  const [bumpBoxes, setBumpBoxes] = useState(2);
 
-  // PIX state
+  // PIX
   const [pixLoading, setPixLoading] = useState(false);
   const [pixError, setPixError] = useState("");
   const [pixQrText, setPixQrText] = useState("");
+  const [pixQrImg, setPixQrImg] = useState("");
   const [pixExternalId, setPixExternalId] = useState("");
 
   const bumpPrice = bumpEnabled ? bumpDiscountedPrice(bumpBoxes) : 0;
@@ -162,9 +128,8 @@ export default function Checkout() {
       setNeighborhood(data.bairro || "");
       setCity(data.localidade || "");
       setUf(data.uf || "");
-
       setCepStatus({ loading: false, error: "" });
-    } catch (e) {
+    } catch {
       setCepStatus({ loading: false, error: "Não foi possível consultar o CEP." });
     }
   };
@@ -174,24 +139,32 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cepDigits]);
 
-  const handleGeneratePix = async () => {
-    setPixError("");
-    setPixQrText("");
-
+  const validate = () => {
     const cpfDigits = onlyDigits(cpf);
     const phoneDigits = onlyDigits(phone);
 
-    if (fullName.trim().length < 3) return setPixError("Preencha o nome completo.");
-    if (!email.includes("@")) return setPixError("Preencha um email válido.");
-    if (cpfDigits.length !== 11) return setPixError("CPF inválido.");
-    if (phoneDigits.length < 10) return setPixError("Telefone inválido.");
+    if (fullName.trim().length < 3) return "Preencha o nome completo.";
+    if (!email.includes("@")) return "Preencha um email válido.";
+    if (cpfDigits.length !== 11) return "CPF inválido.";
+    if (phoneDigits.length < 10) return "Telefone inválido.";
 
-    if (onlyDigits(cep).length !== 8) return setPixError("CEP inválido.");
-    if (!street.trim()) return setPixError("Preencha a rua.");
-    if (!number.trim()) return setPixError("Preencha o número.");
-    if (!neighborhood.trim()) return setPixError("Preencha o bairro.");
-    if (!city.trim()) return setPixError("Preencha a cidade.");
-    if (!uf.trim()) return setPixError("Selecione o estado.");
+    if (onlyDigits(cep).length !== 8) return "CEP inválido.";
+    if (!street.trim()) return "Preencha a rua.";
+    if (!number.trim()) return "Preencha o número.";
+    if (!neighborhood.trim()) return "Preencha o bairro.";
+    if (!city.trim()) return "Preencha a cidade.";
+    if (!uf.trim()) return "Selecione o estado.";
+
+    return "";
+  };
+
+  const handleGeneratePix = async () => {
+    setPixError("");
+    setPixQrText("");
+    setPixQrImg("");
+
+    const err = validate();
+    if (err) return setPixError(err);
 
     const externalId = `ALBUMCOPA-${Date.now()}`;
     setPixExternalId(externalId);
@@ -203,24 +176,32 @@ export default function Checkout() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: Number(totalNum.toFixed(2)), // ✅ KIT + BUMP já somado
+          amount: Number(totalNum.toFixed(2)),
           name: fullName.trim(),
-          document: cpfDigits,
-          phone: phoneDigits,
+          document: onlyDigits(cpf),
+          phone: onlyDigits(phone),
           external_id: externalId,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok || !data?.success) {
         setPixError(data?.error || "Não foi possível gerar o PIX.");
         return;
       }
 
-      setPixQrText(data.qr_code_text || "");
-      if (!data.qr_code_text) setPixError("PIX gerado, mas sem qr_code_text na resposta.");
-    } catch (e) {
+      const code = String(data.qr_code_text || "");
+      if (!code) {
+        setPixError("PIX gerado, mas sem qr_code_text na resposta.");
+        return;
+      }
+
+      setPixQrText(code);
+
+      // QR visual
+      const img = await QRCode.toDataURL(code, { margin: 1, width: 260 });
+      setPixQrImg(img);
+    } catch {
       setPixError("Falha na comunicação. Tente novamente.");
     } finally {
       setPixLoading(false);
@@ -233,7 +214,6 @@ export default function Checkout() {
         <button className="coBack" type="button" onClick={() => nav(-1)}>
           ← <span>Voltar</span>
         </button>
-
         <img className="coLogo" src="/assets/logo.png" alt="Logo" />
         <div className="coTop__spacer" />
       </div>
@@ -246,7 +226,6 @@ export default function Checkout() {
               <div className="coThumbWrap">
                 <img className="coThumb" src={THUMB} alt="" />
               </div>
-
               <div>
                 <div className="coKitTitle">{kit.title}</div>
                 <div className="coKitDesc">{kit.desc}</div>
@@ -291,63 +270,28 @@ export default function Checkout() {
           <div className="coFormTitle">Dados Pessoais</div>
 
           <div className="coField">
-            <label className="coLabel">
-              Nome Completo <span className="coReq">*</span>
-            </label>
-            <input
-              className="coInput"
-              placeholder="Seu nome completo"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              maxLength={80}
-              autoComplete="name"
-            />
+            <label className="coLabel">Nome Completo <span className="coReq">*</span></label>
+            <input className="coInput" placeholder="Seu nome completo" value={fullName}
+              onChange={(e) => setFullName(e.target.value)} maxLength={80} autoComplete="name" />
           </div>
 
           <div className="coField">
-            <label className="coLabel">
-              Email <span className="coReq">*</span>
-            </label>
-            <input
-              className="coInput"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              maxLength={80}
-              inputMode="email"
-              autoComplete="email"
-            />
+            <label className="coLabel">Email <span className="coReq">*</span></label>
+            <input className="coInput" placeholder="seu@email.com" value={email}
+              onChange={(e) => setEmail(e.target.value)} maxLength={80} inputMode="email" autoComplete="email" />
           </div>
 
           <div className="coGrid2">
             <div className="coField">
-              <label className="coLabel">
-                Telefone <span className="coReq">*</span>
-              </label>
-              <input
-                className="coInput"
-                placeholder="(00) 00000-0000"
-                value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                inputMode="numeric"
-                autoComplete="tel"
-                maxLength={15}
-              />
+              <label className="coLabel">Telefone <span className="coReq">*</span></label>
+              <input className="coInput" placeholder="(00) 00000-0000" value={phone}
+                onChange={(e) => setPhone(formatPhone(e.target.value))} inputMode="numeric" autoComplete="tel" maxLength={15} />
             </div>
 
             <div className="coField">
-              <label className="coLabel">
-                CPF <span className="coReq">*</span>
-              </label>
-              <input
-                className="coInput"
-                placeholder="000.000.000-00"
-                value={cpf}
-                onChange={(e) => setCpf(formatCPF(e.target.value))}
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={14}
-              />
+              <label className="coLabel">CPF <span className="coReq">*</span></label>
+              <input className="coInput" placeholder="000.000.000-00" value={cpf}
+                onChange={(e) => setCpf(formatCPF(e.target.value))} inputMode="numeric" autoComplete="off" maxLength={14} />
             </div>
           </div>
         </div>
@@ -357,28 +301,16 @@ export default function Checkout() {
           <div className="coFormTitle">Endereço de Entrega</div>
 
           <div className="coField">
-            <label className="coLabel">
-              CEP <span className="coReq">*</span>
-            </label>
+            <label className="coLabel">CEP <span className="coReq">*</span></label>
 
             <div className="coCepRow">
-              <input
-                className="coInput"
-                placeholder="00000-000"
-                value={cep}
+              <input className="coInput" placeholder="00000-000" value={cep}
                 onChange={(e) => setCep(formatCEP(e.target.value))}
                 onBlur={() => fetchCep(cep)}
-                inputMode="numeric"
-                autoComplete="postal-code"
-                maxLength={9}
-              />
+                inputMode="numeric" autoComplete="postal-code" maxLength={9} />
 
-              <button
-                type="button"
-                className="coCepBtn"
-                onClick={() => fetchCep(cep)}
-                disabled={cepDigits.length !== 8 || cepStatus.loading}
-              >
+              <button type="button" className="coCepBtn" onClick={() => fetchCep(cep)}
+                disabled={cepDigits.length !== 8 || cepStatus.loading}>
                 {cepStatus.loading ? "Buscando..." : "Buscar"}
               </button>
             </div>
@@ -387,102 +319,50 @@ export default function Checkout() {
           </div>
 
           <div className="coField">
-            <label className="coLabel">
-              Rua/Logradouro <span className="coReq">*</span>
-            </label>
-            <input
-              className="coInput"
-              placeholder="Nome da rua"
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              maxLength={80}
-              autoComplete="address-line1"
-            />
+            <label className="coLabel">Rua/Logradouro <span className="coReq">*</span></label>
+            <input className="coInput" placeholder="Nome da rua" value={street}
+              onChange={(e) => setStreet(e.target.value)} maxLength={80} autoComplete="address-line1" />
           </div>
 
           <div className="coGrid2">
             <div className="coField">
-              <label className="coLabel">
-                Número <span className="coReq">*</span>
-              </label>
-              <input
-                className="coInput"
-                placeholder="123"
-                value={number}
+              <label className="coLabel">Número <span className="coReq">*</span></label>
+              <input className="coInput" placeholder="123" value={number}
                 onChange={(e) => setNumber(onlyDigits(e.target.value).slice(0, 6))}
-                inputMode="numeric"
-                maxLength={6}
-                autoComplete="address-line2"
-              />
+                inputMode="numeric" maxLength={6} autoComplete="address-line2" />
             </div>
 
             <div className="coField">
               <label className="coLabel">Complemento</label>
-              <input
-                className="coInput"
-                placeholder="Apto, Bloco..."
-                value={complement}
-                onChange={(e) => setComplement(e.target.value)}
-                maxLength={40}
-                autoComplete="address-line2"
-              />
+              <input className="coInput" placeholder="Apto, Bloco..." value={complement}
+                onChange={(e) => setComplement(e.target.value)} maxLength={40} autoComplete="address-line2" />
             </div>
           </div>
 
           <div className="coField">
-            <label className="coLabel">
-              Bairro <span className="coReq">*</span>
-            </label>
-            <input
-              className="coInput"
-              placeholder="Nome do bairro"
-              value={neighborhood}
-              onChange={(e) => setNeighborhood(e.target.value)}
-              maxLength={60}
-              autoComplete="address-level3"
-            />
+            <label className="coLabel">Bairro <span className="coReq">*</span></label>
+            <input className="coInput" placeholder="Nome do bairro" value={neighborhood}
+              onChange={(e) => setNeighborhood(e.target.value)} maxLength={60} autoComplete="address-level3" />
           </div>
 
           <div className="coGrid2">
             <div className="coField">
-              <label className="coLabel">
-                Cidade <span className="coReq">*</span>
-              </label>
-              <input
-                className="coInput"
-                placeholder="Nome da cidade"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                maxLength={60}
-                autoComplete="address-level2"
-              />
+              <label className="coLabel">Cidade <span className="coReq">*</span></label>
+              <input className="coInput" placeholder="Nome da cidade" value={city}
+                onChange={(e) => setCity(e.target.value)} maxLength={60} autoComplete="address-level2" />
             </div>
 
             <div className="coField">
-              <label className="coLabel">
-                Estado <span className="coReq">*</span>
-              </label>
-
+              <label className="coLabel">Estado <span className="coReq">*</span></label>
               <div className="coSelectWrap">
-                <select
-                  className="coSelect"
-                  value={uf}
-                  onChange={(e) => setUf(e.target.value)}
-                  autoComplete="address-level1"
-                >
+                <select className="coSelect" value={uf} onChange={(e) => setUf(e.target.value)}
+                  autoComplete="address-level1">
                   <option value="">UF</option>
-                  {UF_LIST.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
+                  {UF_LIST.map((u) => <option key={u} value={u}>{u}</option>)}
                 </select>
 
                 <svg className="coSelectChevron" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="currentColor"
-                    d="M6.7 9.3a1 1 0 0 1 1.4 0L12 13.2l3.9-3.9a1 1 0 1 1 1.4 1.4l-4.6 4.6a1 1 0 0 1-1.4 0L6.7 10.7a1 1 0 0 1 0-1.4Z"
-                  />
+                  <path fill="currentColor" d="M6.7 9.3a1 1 0 0 1 1.4 0L12 13.2l3.9-3.9a1 1 0 1 1 1.4 1.4l-4.6 4.6a1 1 0 0 1-1.4 0L6.7 10.7a1 1 0 0 1 0-1.4Z" />
                 </svg>
               </div>
             </div>
@@ -492,19 +372,13 @@ export default function Checkout() {
         {/* ORDER BUMP (2/4/8) */}
         <div className="coBump">
           <div className="coBump__top">
-            <div className="coBump__label">
-              <span className="coBump__gift">🎁</span> OFERTA ESPECIAL
-            </div>
+            <div className="coBump__label"><span className="coBump__gift">🎁</span> OFERTA ESPECIAL</div>
             <div className="coBump__hint">Adicione ao seu pedido</div>
           </div>
 
           <div className="coBump__body">
-            <label className="coBump__check">
-              <input
-                type="checkbox"
-                checked={bumpEnabled}
-                onChange={(e) => setBumpEnabled(e.target.checked)}
-              />
+            <label className="coBump__check" aria-label="Ativar oferta especial">
+              <input type="checkbox" checked={bumpEnabled} onChange={(e) => setBumpEnabled(e.target.checked)} />
               <span className="coBump__box" />
             </label>
 
@@ -514,7 +388,7 @@ export default function Checkout() {
 
             <div className="coBump__mid">
               <div className="coBump__title">
-                {bumpBoxes} {bumpBoxes === 1 ? "Caixa" : "Caixas"} de Figurinha
+                {bumpBoxes} Caixas de Figurinha
                 <span className="coBump__badge">-{BUMP_DISCOUNT_PCT}%</span>
               </div>
 
@@ -528,10 +402,7 @@ export default function Checkout() {
                     key={n}
                     type="button"
                     className={`coBump__opt ${bumpBoxes === n ? "isOn" : ""}`}
-                    onClick={() => {
-                      setBumpBoxes(n);
-                      setBumpEnabled(true);
-                    }}
+                    onClick={() => { setBumpBoxes(n); setBumpEnabled(true); }}
                   >
                     {n}x
                   </button>
@@ -556,15 +427,17 @@ export default function Checkout() {
         {pixQrText ? (
           <div className="coPixBox">
             <div className="coPixBox__title">PIX gerado ✅</div>
-            <div className="coPixBox__subtitle">Copie e cole no app do seu banco</div>
+            <div className="coPixBox__subtitle">Escaneie o QR Code ou copie e cole no app do banco</div>
+
+            {pixQrImg ? (
+              <div className="coPixBox__qrWrap">
+                <img className="coPixBox__qr" src={pixQrImg} alt="QR Code PIX" />
+              </div>
+            ) : null}
 
             <textarea className="coPixBox__code" readOnly value={pixQrText} />
 
-            <button
-              type="button"
-              className="coPixBox__copy"
-              onClick={() => navigator.clipboard.writeText(pixQrText)}
-            >
+            <button type="button" className="coPixBox__copy" onClick={() => navigator.clipboard.writeText(pixQrText)}>
               COPIAR CÓDIGO PIX
             </button>
 
@@ -572,10 +445,7 @@ export default function Checkout() {
           </div>
         ) : null}
 
-        <div className="coSecureNote">
-          Seus dados estão protegidos e não serão compartilhados.
-        </div>
-
+        <div className="coSecureNote">Seus dados estão protegidos e não serão compartilhados.</div>
         <div className="coFooterNote">Panini - Todos os direitos reservados.</div>
       </div>
     </div>
