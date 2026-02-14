@@ -67,7 +67,6 @@ const parseBRL = (s) => {
 };
 
 const formatBRL = (n) => {
-  // 198.9 -> "R$ 198,90"
   const v = Number.isFinite(n) ? n : 0;
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
 };
@@ -134,6 +133,12 @@ export default function Checkout() {
   const [bumpEnabled, setBumpEnabled] = useState(false);
   const [bumpBoxes, setBumpBoxes] = useState(2); // 2, 4, 8
 
+  // PIX state
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixError, setPixError] = useState("");
+  const [pixQrText, setPixQrText] = useState("");
+  const [pixExternalId, setPixExternalId] = useState("");
+
   const bumpPrice = bumpEnabled ? bumpDiscountedPrice(bumpBoxes) : 0;
   const kitPriceNum = parseBRL(kit.price);
   const totalNum = kitPriceNum + bumpPrice;
@@ -168,6 +173,59 @@ export default function Checkout() {
     if (cepDigits.length === 8) fetchCep(cepDigits);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cepDigits]);
+
+  const handleGeneratePix = async () => {
+    setPixError("");
+    setPixQrText("");
+
+    const cpfDigits = onlyDigits(cpf);
+    const phoneDigits = onlyDigits(phone);
+
+    if (fullName.trim().length < 3) return setPixError("Preencha o nome completo.");
+    if (!email.includes("@")) return setPixError("Preencha um email válido.");
+    if (cpfDigits.length !== 11) return setPixError("CPF inválido.");
+    if (phoneDigits.length < 10) return setPixError("Telefone inválido.");
+
+    if (onlyDigits(cep).length !== 8) return setPixError("CEP inválido.");
+    if (!street.trim()) return setPixError("Preencha a rua.");
+    if (!number.trim()) return setPixError("Preencha o número.");
+    if (!neighborhood.trim()) return setPixError("Preencha o bairro.");
+    if (!city.trim()) return setPixError("Preencha a cidade.");
+    if (!uf.trim()) return setPixError("Selecione o estado.");
+
+    const externalId = `ALBUMCOPA-${Date.now()}`;
+    setPixExternalId(externalId);
+
+    try {
+      setPixLoading(true);
+
+      const res = await fetch("/api/pix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(totalNum.toFixed(2)), // ✅ KIT + BUMP já somado
+          name: fullName.trim(),
+          document: cpfDigits,
+          phone: phoneDigits,
+          external_id: externalId,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data?.success) {
+        setPixError(data?.error || "Não foi possível gerar o PIX.");
+        return;
+      }
+
+      setPixQrText(data.qr_code_text || "");
+      if (!data.qr_code_text) setPixError("PIX gerado, mas sem qr_code_text na resposta.");
+    } catch (e) {
+      setPixError("Falha na comunicação. Tente novamente.");
+    } finally {
+      setPixLoading(false);
+    }
+  };
 
   return (
     <div className="co">
@@ -488,10 +546,31 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* Botão final igual print */}
-        <button className="coFinish" type="button">
-          GERAR PIX E FINALIZAR
+        {/* Botão final */}
+        <button className="coFinish" type="button" onClick={handleGeneratePix} disabled={pixLoading}>
+          {pixLoading ? "GERANDO PIX..." : "GERAR PIX E FINALIZAR"}
         </button>
+
+        {pixError ? <div className="coError coError--center">{pixError}</div> : null}
+
+        {pixQrText ? (
+          <div className="coPixBox">
+            <div className="coPixBox__title">PIX gerado ✅</div>
+            <div className="coPixBox__subtitle">Copie e cole no app do seu banco</div>
+
+            <textarea className="coPixBox__code" readOnly value={pixQrText} />
+
+            <button
+              type="button"
+              className="coPixBox__copy"
+              onClick={() => navigator.clipboard.writeText(pixQrText)}
+            >
+              COPIAR CÓDIGO PIX
+            </button>
+
+            <div className="coPixBox__meta">Pedido: {pixExternalId}</div>
+          </div>
+        ) : null}
 
         <div className="coSecureNote">
           Seus dados estão protegidos e não serão compartilhados.
