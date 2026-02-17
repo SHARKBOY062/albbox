@@ -53,6 +53,13 @@ const bumpFullPrice = (boxes) => bumpDiscountedPrice(boxes) / (1 - BUMP_DISCOUNT
 const bumpPacks = (boxes) => boxes * 30;
 const bumpStickers = (boxes) => boxes * 210;
 
+/* ================= META PIXEL helpers ================= */
+const fb = (...args) => {
+  try {
+    if (typeof window !== "undefined" && typeof window.fbq === "function") window.fbq(...args);
+  } catch {}
+};
+
 export default function Checkout() {
   const nav = useNavigate();
   const location = useLocation();
@@ -96,6 +103,10 @@ export default function Checkout() {
   const [pixQrImg, setPixQrImg] = useState("");
   const [pixExternalId, setPixExternalId] = useState("");
   const [pixOpen, setPixOpen] = useState(false);
+
+  // controle de disparos (pra não duplicar)
+  const [sentInit, setSentInit] = useState(false);
+  const [sentPayInfo, setSentPayInfo] = useState(false);
 
   const bumpPrice = bumpEnabled ? bumpDiscountedPrice(bumpBoxes) : 0;
   const kitPriceNum = parseBRL(kit.price);
@@ -159,6 +170,23 @@ export default function Checkout() {
     const err = validate();
     if (err) return setPixError(err);
 
+    // 🔥 Pixel: InitiateCheckout (uma vez por tentativa)
+    if (!sentInit) {
+      fb("track", "InitiateCheckout", {
+        value: Number(totalNum.toFixed(2)),
+        currency: "BRL",
+        content_name: kit.title,
+        content_ids: [kit.id],
+        contents: [{ id: kit.id, quantity: 1, item_price: Number(kitPriceNum.toFixed(2)) }],
+        num_items: 1,
+        external_id: pixExternalId || undefined,
+        order_bump: bumpEnabled ? "yes" : "no",
+        bump_boxes: bumpEnabled ? bumpBoxes : 0,
+        bump_value: Number(bumpPrice.toFixed(2)),
+      });
+      setSentInit(true);
+    }
+
     const externalId = `ALBUMCOPA-${Date.now()}`;
     setPixExternalId(externalId);
 
@@ -195,6 +223,22 @@ export default function Checkout() {
       const img = await QRCode.toDataURL(code, { margin: 1, width: 260 });
       setPixQrImg(img);
 
+      // 🔥 Pixel: AddPaymentInfo (quando PIX foi gerado de verdade)
+      if (!sentPayInfo) {
+        fb("track", "AddPaymentInfo", {
+          value: Number(totalNum.toFixed(2)),
+          currency: "BRL",
+          payment_method: "pix",
+          content_name: kit.title,
+          content_ids: [kit.id],
+          external_id: externalId,
+          order_bump: bumpEnabled ? "yes" : "no",
+          bump_boxes: bumpEnabled ? bumpBoxes : 0,
+          bump_value: Number(bumpPrice.toFixed(2)),
+        });
+        setSentPayInfo(true);
+      }
+
       // abre modal
       setPixOpen(true);
     } catch {
@@ -202,6 +246,21 @@ export default function Checkout() {
     } finally {
       setPixLoading(false);
     }
+  };
+
+  const handlePaid = () => {
+    // ⚠️ Isso NÃO confirma pagamento real, é só “auto-declarado”
+    fb("track", "Purchase", {
+      value: Number(totalNum.toFixed(2)),
+      currency: "BRL",
+      content_name: kit.title,
+      content_ids: [kit.id],
+      contents: [{ id: kit.id, quantity: 1, item_price: Number(kitPriceNum.toFixed(2)) }],
+      external_id: pixExternalId,
+      order_bump: bumpEnabled ? "yes" : "no",
+      bump_boxes: bumpEnabled ? bumpBoxes : 0,
+      bump_value: Number(bumpPrice.toFixed(2)),
+    });
   };
 
   return (
@@ -214,10 +273,7 @@ export default function Checkout() {
         logoSrc="/assets/logo.png"
         externalId={pixExternalId}
         onClose={() => setPixOpen(false)}
-        onPaid={() => {
-          // opcional: aqui você pode navegar pra uma rota /obrigado depois
-          // nav("/obrigado");
-        }}
+        onPaid={handlePaid}
       />
 
       <div className="coTop">
