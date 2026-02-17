@@ -1,0 +1,33 @@
+.header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11,15,23,.75);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.header__inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+
+.header__brand{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.dot{ color: var(--primary); }
+
+.header__nav a{
+  opacity: .9;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.header__nav a.active{
+  background: var(--card);
+  border: 1px solid var(--line);
+}

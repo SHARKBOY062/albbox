@@ -403,7 +403,7 @@ export default function Checkout() {
               </div>
 
               <div className="coBump__sub">
-                {bumpPacks(bumpBoxes)} pacotes extras ({bumpStickers(bumpBoxes)} figurinhas)
+                {bumpPacks(bumpBoxes)} pacotes extras ({bumpStickers(bumpBoxes)} figurinhas) (Na compra de 2 caixas extras ou mais, vem Garantido 10 cartas douradas)
               </div>
 
               <div className="coBump__opts">
