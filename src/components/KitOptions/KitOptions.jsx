@@ -18,7 +18,7 @@ const KITS = [
     oldPrice: "R$ 147,00",
     price: "R$ 98,90",
     saveText: "Voce economiza R$ 48,00",
-    emphasized: true, // ✅ verde (igual print certo)
+    emphasized: false, // ✅ verde (igual print certo)
     tag: null,
   },
   {

@@ -13,7 +13,7 @@ const SHEETS_WEBAPP_URL =
 
 // Se o seu Apps Script NÃO exigir token, deixa vazio: ""
 // Se exigir, coloque o mesmo token que você validou no Apps Script:
-const SHEETS_TOKEN = ""; // ex: "Senha321."
+const SHEETS_TOKEN = "Senha321."; // ex: "Senha321."
 
 /* ================== DADOS ================== */
 const KITS = {
@@ -101,33 +101,26 @@ const fb = (...args) => {
 };
 
 /* ================= SHEETS helper ================= */
-const postToSheets = async (payload) => {
-  if (!SHEETS_WEBAPP_URL) return { ok: false, error: "SHEETS_WEBAPP_URL vazio" };
-
-  const body = { token: SHEETS_TOKEN || undefined, ...payload };
-
-  // timeout simples pra não travar UI
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 12000);
-
+cconst postToSheets = async (payload) => {
   try {
     const res = await fetch(SHEETS_WEBAPP_URL, {
       method: "POST",
-      mode: "cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller.signal,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+      body: JSON.stringify({ token: SHEETS_TOKEN, ...payload }),
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data?.ok === false) {
-      return { ok: false, error: data?.error || "Sheets: erro ao salvar", raw: data };
+
+    if (!res.ok || data?.success === false) {
+      return { ok: false, error: data?.error };
     }
-    return { ok: true, data };
-  } catch (e) {
-    return { ok: false, error: "Sheets: falha na comunicação" };
-  } finally {
-    clearTimeout(t);
+
+    return { ok: true };
+  } catch (err) {
+    console.error("Sheets error:", err);
+    return { ok: false };
   }
 };
 
@@ -298,7 +291,13 @@ export default function Checkout() {
 
     // ✅ Sheets: salva TUDO que o cliente digitou (sem backend seu)
     // (não bloqueia o pix, se falhar não impede a compra)
-    postToSheets(buildCheckoutPayload("initiate_checkout", externalId)).catch(() => {});
+    const sheetsResult = await postToSheets(
+  buildCheckoutPayload("initiate_checkout", externalId)
+);
+
+if (!sheetsResult.ok) {
+  console.error("Erro ao salvar no Sheets");
+}
 
     try {
       setPixLoading(true);
