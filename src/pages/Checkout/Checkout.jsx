@@ -101,7 +101,7 @@ const fb = (...args) => {
 };
 
 /* ================= SHEETS helper ================= */
-cconst postToSheets = async (payload) => {
+const postToSheets = async (payload) => {
   try {
     const res = await fetch(SHEETS_WEBAPP_URL, {
       method: "POST",
@@ -226,38 +226,35 @@ export default function Checkout() {
   };
 
   const buildCheckoutPayload = (status, externalId) => ({
-    status, // "initiate_checkout" | "pix_generated" | "paid_clicked"
-    ts: new Date().toISOString(),
-    external_id: externalId,
+  createdAt: new Date().toISOString(),
+  external_id: externalId,
 
-    // kit + total
-    kit_id: kit.id,
-    kit_title: kit.title,
-    kit_price: Number(kitPriceNum.toFixed(2)),
-    bump_enabled: bumpEnabled ? "yes" : "no",
-    bump_boxes: bumpEnabled ? bumpBoxes : 0,
-    bump_price: Number(bumpPrice.toFixed(2)),
-    total: Number(totalNum.toFixed(2)),
+  kitId: kit.id,
+  kitTitle: kit.title,
+  total: Number(totalNum.toFixed(2)),
 
-    // cliente
-    full_name: fullName.trim(),
-    email: email.trim(),
-    phone: onlyDigits(phone),
-    cpf: onlyDigits(cpf),
+  bumpEnabled: bumpEnabled ? "yes" : "no",
+  bumpBoxes: bumpEnabled ? bumpBoxes : 0,
+  bumpPrice: Number(bumpPrice.toFixed(2)),
 
-    // endereço
-    cep: onlyDigits(cep),
-    street: street.trim(),
-    number: String(number || "").trim(),
-    complement: String(complement || "").trim(),
-    neighborhood: neighborhood.trim(),
-    city: city.trim(),
-    uf: uf.trim(),
+  fullName: fullName.trim(),
+  email: email.trim(),
+  phone: onlyDigits(phone),
+  cpf: onlyDigits(cpf),
 
-    // extras úteis
-    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-    page: typeof window !== "undefined" ? window.location.href : "",
-  });
+  cep: onlyDigits(cep),
+  street: street.trim(),
+  number: String(number || "").trim(),
+  complement: String(complement || "").trim(),
+  neighborhood: neighborhood.trim(),
+  city: city.trim(),
+  uf: uf.trim(),
+
+  pageUrl: window.location.href,
+  userAgent: navigator.userAgent,
+
+  status,
+});
 
   const handleGeneratePix = async () => {
     setPixError("");
