@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./KitOptions.css";
 import KitCard from "../KitCard/KitCard";
+import PrizeWheel from "../../components/PrizeWheel/PrizeWheel";
 
 const THUMB = "/assets/albbox.png";
 
@@ -18,7 +19,7 @@ const KITS = [
     oldPrice: "R$ 147,00",
     price: "R$ 98,90",
     saveText: "Voce economiza R$ 48,00",
-    emphasized: false, // ✅ verde (igual print certo)
+    emphasized: false,
     tag: null,
   },
   {
@@ -33,7 +34,7 @@ const KITS = [
     oldPrice: "R$ 227,00",
     price: "R$ 148,90",
     saveText: "Voce economiza R$ 78,00",
-    emphasized: false, // ✅ cinza (igual print certo)
+    emphasized: false,
     tag: { text: "MAIS VENDIDO", tone: "green" },
   },
   {
@@ -60,11 +61,18 @@ export default function KitOptions() {
     return localStorage.getItem("albumcopa_kitId") || "colecionador";
   });
 
+  const [showWheel, setShowWheel] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("albumcopa_kitId", selected);
   }, [selected]);
 
+  const openWheel = () => {
+    setShowWheel(true);
+  };
+
   const goCheckout = () => {
+    setShowWheel(false);
     nav("/checkout", { state: { kitId: selected } });
   };
 
@@ -92,10 +100,22 @@ export default function KitOptions() {
         ))}
       </div>
 
-      <button className="kitOptions__cta" type="button" onClick={goCheckout}>
-        <div className="kitOptions__ctaTitle">GARANTIR MEU KIT AGORA</div>
-        <div className="kitOptions__ctaSub">Frete Grátis para Todo Brasil</div>
+      <button
+        className="kitOptions__cta"
+        type="button"
+        onClick={openWheel}
+      >
+        <div className="kitOptions__ctaTitle">
+          GARANTIR MEU KIT AGORA
+        </div>
+        <div className="kitOptions__ctaSub">
+          Frete Grátis para Todo Brasil
+        </div>
       </button>
+
+      {showWheel && (
+        <PrizeWheel onFinish={goCheckout} />
+      )}
     </div>
   );
 }
